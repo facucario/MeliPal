@@ -1,22 +1,12 @@
 # test_scraper.py
 
-from bs4 import BeautifulSoup
-import requests
 import sys
+import os
 
-def get_listings(url: str) -> list[str]:
-    headers = {}
-    links = []
-    res = requests.get(url, headers=headers, timeout=10)
-    soup = BeautifulSoup(res.text, "lxml")
+# Add src directory to Python path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-    published_today = len(soup.find_all(string="Publicados hoy")) > 0
-
-    if (published_today):
-      anchors = soup.select("a.poly-component__title")
-      links = [a["href"].split("#")[0] for a in anchors if a.get("href")]
-
-    return links
+from scraper import get_listings
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
