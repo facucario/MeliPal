@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import logging
 
 from config import REQUEST_DELAY_MIN, REQUEST_DELAY_MAX
+from proxy_manager import proxy_manager
 
 logger = logging.getLogger(__name__)
 
@@ -27,13 +28,21 @@ def get_listings(url: str) -> list[str]:
     url = transform_listado_to_autos(url)
     
     headers = {
-        "User-Agent": "Mozilla/5.0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         "Accept-Language": "es-AR,es;q=0.9,en;q=0.8",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
     }
+    
     try:
-        res = requests.get(url, headers=headers, timeout=10)
-        res.raise_for_status()
-    except requests.RequestException as e:
+        # Use proxy manager for the request
+        res = proxy_manager.make_request_with_proxy(url, headers=headers, timeout=15)
+        if res is None:
+            logger.error(f"Failed to fetch URL {url} with proxy")
+            return []
+    except Exception as e:
         logger.error(f"Failed to fetch URL {url}: {e}")
         return []
 
@@ -67,12 +76,22 @@ def get_title_from_url(url: str) -> str:
     # Add delay before making request
     _add_request_delay()
     
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Accept-Language": "es-AR,es;q=0.9",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+    }
+    
     try:
-        headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Accept-Language": "es-AR,es;q=0.9",
-        }
-        res = requests.get(url, headers=headers, timeout=5)
+        # Use proxy manager for the request
+        res = proxy_manager.make_request_with_proxy(url, headers=headers, timeout=10)
+        if res is None:
+            logger.warning(f"Failed to fetch title for {url} with proxy")
+            return url
+            
         soup = BeautifulSoup(res.text, "lxml")
 
         title_tag = soup.find("title")
@@ -94,14 +113,21 @@ def get_car_details(url: str) -> dict:
     _add_request_delay()
     
     headers = {
-        "User-Agent": "Mozilla/5.0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         "Accept-Language": "es-AR,es;q=0.9,en;q=0.8",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
     }
     
     try:
-        res = requests.get(url, headers=headers, timeout=10)
-        res.raise_for_status()
-    except requests.RequestException as e:
+        # Use proxy manager for the request
+        res = proxy_manager.make_request_with_proxy(url, headers=headers, timeout=15)
+        if res is None:
+            logger.error(f"Failed to fetch car details from {url} with proxy")
+            return {"title": "Error al cargar", "price": "N/A", "year": "N/A", "kilometers": "N/A", "location": "N/A", "url": url}
+    except Exception as e:
         logger.error(f"Failed to fetch car details from {url}: {e}")
         return {"title": "Error al cargar", "price": "N/A", "year": "N/A", "kilometers": "N/A", "location": "N/A", "url": url}
 
